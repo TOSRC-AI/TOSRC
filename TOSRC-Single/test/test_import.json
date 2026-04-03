@@ -1,0 +1,45 @@
+[
+    {
+        "scene_id": "weather",
+        "config": {
+            "base": {
+                "scene_id": "weather",
+                "scene_name": "天气服务场景",
+                "priority": 10,
+                "enable": true,
+                "scene_desc": "处理天气查询、预警、历史数据查询等意图"
+            },
+            "intent": {
+                "intent_list": [
+                    {
+                        "intent_id": "weather_query",
+                        "intent_name": "天气查询",
+                        "intent_desc": "查询指定时间/地点的天气情况",
+                        "priority": 1,
+                        "rules": [
+                            {
+                                "rule_type": "keyword",
+                                "keywords": ["天气", "温度", "下雨", "刮风", "预报", "气温", "下雪", "雾霾", "湿度", "风力", "风向"],
+                                "threshold": 1,
+                                "confidence": 1.0
+                            }
+                        ]
+                    }
+                ]
+            },
+            "entity": {
+                "entity_list": []
+            },
+            "route": {
+                "route_rules": [
+                    {
+                        "intent_id": "weather_query",
+                        "route_target": "weather_service",
+                        "confidence_threshold": 0.8,
+                        "output_format": "JSON"
+                    }
+                ]
+            }
+        }
+    }
+]

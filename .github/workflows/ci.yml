@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e TOSRC-Core/
+          pip install -r TOSRC-Single/requirements.txt
+          pip install pytest pytest-cov
+
+      - name: Run tests
+        env:
+          PYTHONPATH: TOSRC-Core/src:TOSRC-Single/src
+        run: |
+          cd TOSRC-Single
+          pytest tests -v --tb=short --cov=src --cov-report=xml --cov-fail-under=70
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: TOSRC-Single/coverage.xml

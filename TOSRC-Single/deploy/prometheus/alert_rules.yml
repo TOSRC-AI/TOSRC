@@ -1,0 +1,70 @@
+groups:
+  - name: llm-router-alerts
+    rules:
+      # 服务异常告警
+      - alert: LLMServiceDown
+        expr: llm_router_service_health{component="service"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "LLM Router 服务异常"
+          description: "LLM Router 服务已经不可用超过1分钟"
+
+      - alert: RuleEngineDown
+        expr: llm_router_service_health{component="rule_engine"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "规则引擎异常"
+          description: "规则引擎组件已经不可用超过1分钟"
+
+      - alert: ModelEngineDown
+        expr: llm_router_service_health{component="model_engine"} == 0
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "模型引擎异常"
+          description: "模型引擎组件已经不可用超过2分钟，服务已降级为纯规则模式"
+
+      # 高错误率告警
+      - alert: HighErrorRate
+        expr: sum(rate(llm_router_request_total{status_code=~"5.."}[5m])) / sum(rate(llm_router_request_total[5m])) > 0.05
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "错误率过高"
+          description: "最近5分钟错误率超过5%，当前值：{{ $value | humanizePercentage }}"
+
+      # 高延迟告警
+      - alert: HighLatency
+        expr: histogram_quantile(0.95, sum(rate(llm_router_request_latency_seconds_bucket[5m])) by (le)) > 0.5
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "响应时间过高"
+          description: "最近5分钟P95响应时间超过500ms，当前值：{{ $value }}s"
+
+      # 高默认路由率告警
+      - alert: HighDefaultRouteRate
+        expr: sum(rate(llm_router_default_route_total[10m])) / sum(rate(llm_router_request_total[10m])) > 0.2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "默认路由率过高"
+          description: "最近10分钟默认路由占比超过20%，当前值：{{ $value | humanizePercentage }}，建议补充规则/优化模型"
+
+      # 规则加载异常告警
+      - alert: NoRulesLoaded
+        expr: llm_router_loaded_rules == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "未加载任何规则"
+          description: "规则引擎未加载任何规则，请检查配置文件"

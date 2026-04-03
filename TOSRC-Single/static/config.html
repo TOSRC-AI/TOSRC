@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LLM Router 配置管理中心</title>
+    <script src="/static/libs/tailwindcss.min.js"></script>
+    <link rel="stylesheet" href="/static/libs/font-awesome/all.min.css">
+    <script src="/static/libs/chart.min.js"></script>
+    <script src="/static/libs/papaparse.min.js"></script>
+    <script src="/static/js/common.js"></script>
+    <script src="/static/js/scene_manager.js"></script>
+    <script src="/static/js/version_manager.js"></script>
+    <script src="/static/js/audit_manager.js"></script>
+    <script src="/static/js/event_binder.js"></script>
+    <style>
+        .tab-active {
+            border-bottom: 2px solid #3b82f6;
+            color: #3b82f6;
+            font-weight: 600;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 2% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 90%;
+            max-width: 1200px;
+            max-height: 90vh;
+            overflow-y: auto;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- 顶部导航 -->
+    <nav class="bg-white shadow-md mb-6">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between items-center py-4">
+                <div class="flex items-center space-x-2">
+                    <i class="fas fa-cog text-blue-600 text-2xl"></i>
+                    <span class="font-bold text-xl text-gray-800">LLM Router 配置管理中心</span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <select id="envSelector" class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="dev">开发环境</option>
+                        <option value="test">测试环境</option>
+                        <option value="prod">生产环境</option>
+                    </select>
+                    <a href="/" class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition">
+                        <i class="fas fa-arrow-left mr-1"></i>返回首页
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mx-auto px-4">
+        <!-- Tab 导航 -->
+        <div class="flex space-x-8 mb-6 border-b border-gray-200">
+            <button class="tab-btn tab-active py-2 px-1" data-tab="scene">
+                <i class="fas fa-list mr-1"></i>场景管理
+            </button>
+            <button class="tab-btn py-2 px-1" data-tab="version">
+                <i class="fas fa-code-branch mr-1"></i>版本管理
+            </button>
+            <button class="tab-btn py-2 px-1" data-tab="gray">
+                <i class="fas fa-traffic-light mr-1"></i>灰度发布
+            </button>
+            <button class="tab-btn py-2 px-1" data-tab="audit">
+                <i class="fas fa-history mr-1"></i>操作审计
+            </button>
+            <button class="tab-btn py-2 px-1" data-tab="samples">
+                <i class="fas fa-database mr-1"></i>样本管理
+            </button>
+        </div>
+
+        <!-- 场景管理 Tab -->
+        <div id="sceneTab" class="tab-content">
+            <div class="flex justify-between items-center mb-4">
+                <div class="flex space-x-2">
+                    <button id="addSceneBtn" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition">
+                        <i class="fas fa-plus mr-1"></i>新增场景
+                    </button>
+                    <button id="importSceneBtn" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition">
+                        <i class="fas fa-upload mr-1"></i>批量导入
+                    </button>
+                    <button id="exportSceneBtn" class="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition">
+                        <i class="fas fa-download mr-1"></i>批量导出
+                    </button>
+                    <button id="reloadConfigBtn" class="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition mr-2">
+                        <i class="fas fa-sync-alt mr-1"></i>重载配置
+                    </button>
+                    <a href="/batch_test" target="_blank" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition inline-flex items-center">
+                        <i class="fas fa-flask mr-1"></i>批量测试
+                    </a>
+                </div>
+                <div class="w-64">
+                    <input type="text" id="searchInput" placeholder="搜索场景ID/名称..." 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+            </div>
+
+            <!-- 场景列表 -->
+            <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                <div class="p-4 bg-gray-50 border-b">
+                    <h3 class="text-lg font-semibold text-gray-700">
+                        <i class="fas fa-list mr-2"></i>已有场景列表（共 <span id="sceneCount" class="text-blue-600">0</span> 个）
+                    </h3>
+                </div>
+                <table class="w-full">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">场景ID</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">场景名称</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">优先级</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">状态</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">更新时间</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sceneList" class="divide-y divide-gray-200">
+                        <!-- 动态加载 -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 版本管理 Tab -->
+        <div id="versionTab" class="tab-content hidden">
+            <div class="flex justify-between items-center mb-4">
+                <button id="createVersionBtn" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition">
+                    <i class="fas fa-plus mr-1"></i>创建新版本
+                </button>
+            </div>
+            <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                <table class="w-full">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">版本ID</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">版本名称</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">描述</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">创建时间</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">环境</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="versionList" class="divide-y divide-gray-200">
+                        <!-- 动态加载 -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 灰度发布 Tab -->
+        <div id="grayTab" class="tab-content hidden">
+            <div class="flex justify-between items-center mb-4">
+                <button id="createGrayBtn" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition">
+                    <i class="fas fa-plus mr-1"></i>新建灰度发布
+                </button>
+            </div>
+            <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                <table class="w-full">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">灰度ID</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">关联版本</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">灰度规则</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">状态</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">创建时间</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="grayList" class="divide-y divide-gray-200">
+                        <tr>
+                            <td colspan="6" class="px-6 py-4 text-center text-gray-500">灰度发布功能开发中...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 操作审计 Tab -->
+        <div id="auditTab" class="tab-content hidden">
+            <div class="flex justify-between items-center mb-4">
+                <div class="flex space-x-3">
+                    <select id="actionFilter" class="px-3 py-2 border border-gray-300 rounded-md">
+                        <option value="">全部操作</option>
+                        <option value="scene_create">创建场景</option>
+                        <option value="scene_update">修改场景</option>
+                        <option value="scene_delete">删除场景</option>
+                        <option value="batch_import">批量导入</option>
+                        <option value="config_reload">配置重载</option>
+                        <option value="version_create">创建版本</option>
+                        <option value="version_rollback">版本回滚</option>
+                        <option value="gray_create">创建灰度</option>
+                        <option value="gray_status_change">灰度状态变更</option>
+                    </select>
+                    <button id="loadAuditBtn" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition">
+                        <i class="fas fa-sync-alt mr-1"></i>刷新
+                    </button>
+                </div>
+                <span class="text-sm text-gray-500">默认显示最近100条操作记录</span>
+            </div>
+            <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                <table class="w-full">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">时间</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作类型</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作描述</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作人</th>
+                        </tr>
+                    </thead>
+                    <tbody id="auditLogList" class="divide-y divide-gray-200">
+                        <!-- 动态加载 -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 新增/编辑场景模态框 -->
+    <div id="sceneModal" class="modal">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold" id="sceneModalTitle">新增场景</h2>
+                <button id="closeSceneModalBtn" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <form id="sceneForm">
+                <input type="hidden" id="editSceneId">
+                <!-- 基础配置 -->
+                <div class="mb-6">
+                    <h3 class="text-lg font-semibold mb-3 text-gray-700">基础配置</h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">场景ID *</label>
+                            <input type="text" id="sceneId" required class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">场景名称 *</label>
+                            <input type="text" id="sceneName" required class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">优先级</label>
+                            <input type="number" id="scenePriority" value="1" min="1" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">状态</label>
+                            <select id="sceneEnable" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                                <option value="true">启用</option>
+                                <option value="false">禁用</option>
+                            </select>
+                        </div>
+                        <div class="col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">场景描述</label>
+                            <textarea id="sceneDesc" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-md"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 意图规则配置 -->
+                <div class="mb-6">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="text-lg font-semibold text-gray-700">意图规则</h3>
+                        <button type="button" id="addIntentRuleBtn" class="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700">
+                            <i class="fas fa-plus mr-1"></i>添加意图
+                        </button>
+                    </div>
+                    <div id="intentRulesContainer">
+                        <!-- 动态添加意图规则 -->
+                    </div>
+                </div>
+
+                <!-- 实体规则配置 -->
+                <div class="mb-6">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="text-lg font-semibold text-gray-700">实体规则</h3>
+                        <button type="button" id="addEntityRuleBtn" class="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700">
+                            <i class="fas fa-plus mr-1"></i>添加实体
+                        </button>
+                    </div>
+                    <div id="entityRulesContainer">
+                        <!-- 动态添加实体规则 -->
+                    </div>
+                </div>
+
+                <!-- 路由规则配置 -->
+                <div class="mb-6">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="text-lg font-semibold text-gray-700">路由规则</h3>
+                        <button type="button" id="addRouteRuleBtn" class="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700">
+                            <i class="fas fa-plus mr-1"></i>添加路由
+                        </button>
+                    </div>
+                    <div id="routeRulesContainer">
+                        <!-- 动态添加路由规则 -->
+                    </div>
+                </div>
+
+                <div class="flex justify-end space-x-3">
+                    <button type="button" id="cancelSceneModalBtn" class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50">取消</button>
+                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 批量导入模态框 -->
+    <div id="importModal" class="modal">
+        <div class="modal-content max-w-2xl">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold">批量导入场景</h2>
+                <button id="closeImportModalBtn" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="mb-4">
+                <div class="flex space-x-4 mb-3">
+                    <button type="button" id="jsonTabBtn" class="px-4 py-2 bg-blue-600 text-white rounded-md">JSON格式</button>
+                    <button type="button" id="csvTabBtn" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md">CSV格式</button>
+                </div>
+                <!-- JSON导入 -->
+                <div id="jsonImportSection">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">导入JSON数据</label>
+                    <textarea id="importJson" rows="12" class="w-full px-3 py-2 border border-gray-300 rounded-md font-mono text-sm"
+                              placeholder='[{"scene_id": "scene1", "config": {"base": {...}, "intent": {...}, ...}}]'></textarea>
+                    <p class="mt-2 text-sm text-gray-500">支持JSON格式的批量场景数据，可直接粘贴AI爬取生成的配置</p>
+                </div>
+                <!-- CSV导入 -->
+                <div id="csvImportSection" class="hidden">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">导入CSV测试用例/场景配置</label>
+                    <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer mb-3" id="fileDropArea">
+                        <i class="fas fa-file-csv text-4xl text-gray-400 mb-2"></i>
+                        <p class="text-gray-600 mb-1">点击上传CSV文件，或拖拽到此处</p>
+                        <p class="text-xs text-gray-500">支持批量场景配置CSV导入</p>
+                        <input type="file" id="csvFileInput" accept=".csv" class="hidden">
+                    </div>
+                    <div class="flex space-x-3">
+                        <a href="#" onclick="downloadSceneTemplate()" class="w-full px-3 py-2 bg-gray-100 text-gray-700 rounded-md text-center text-sm hover:bg-gray-200 transition">
+                            <i class="fas fa-download mr-1"></i>下载场景配置模板
+                        </a>
+                    </div>
+                    <div id="csvPreview" class="mt-3 hidden">
+                        <p class="text-sm text-green-600 mb-2" id="csvFileName"></p>
+                        <div class="max-h-40 overflow-x-auto">
+                            <table class="w-full border-collapse text-sm">
+                                <thead class="bg-gray-50">
+                                    <tr id="csvHeaderRow"></tr>
+                                </thead>
+                                <tbody id="csvPreviewRows"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="importTypeInfo" class="mb-4 hidden">
+                <div class="p-3 rounded-md bg-blue-50 border border-blue-200">
+                    <p class="text-sm text-blue-800">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        <span id="importTypeText">已识别为：场景配置文件，共 0 条数据</span>
+                    </p>
+                </div>
+            </div>
+            <div class="flex justify-end space-x-3">
+                <button type="button" id="cancelImportModalBtn" class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50">取消</button>
+                <button id="importActionBtn" type="button" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 hidden">
+                    导入场景配置
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 创建版本模态框 -->
+    <div id="createVersionModal" class="modal">
+        <div class="modal-content max-w-md">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold">创建配置版本</h2>
+                <button id="closeCreateVersionModalBtn" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <form id="versionForm">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">版本名称 *</label>
+                    <input type="text" id="versionName" required class="w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="v1.0.0">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">版本描述</label>
+                    <textarea id="versionDesc" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="描述本次版本更新内容..."></textarea>
+                </div>
+                <div class="flex justify-end space-x-3">
+                    <button type="button" id="cancelCreateVersionModalBtn" class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50">取消</button>
+                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">创建</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    </div>
+    <script>
+        // 下载场景配置模板
+        function downloadSceneTemplate() {
+            // 调用后端动态生成的模板，自动同步数据库字段
+            fetch('/api/v1/template/scene_config_csv', {
+                headers: {
+                    'X-API-Key': 'admin-llm-router-2026' // 替换为实际API Key
+                }
+            })
+            .then(res => res.blob())
+            .then(blob => {
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = '场景配置模板.csv';
+                link.click();
+            })
+            .catch(err => {
+                alert('下载模板失败，请检查API Key是否正确');
+                console.error('下载模板失败:', err);
+            });
+        }
+    </script>
+</body>
+</html>

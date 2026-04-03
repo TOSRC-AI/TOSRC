@@ -1,0 +1,127 @@
+{
+  "route_strategy": {
+    "confidence_threshold": 0.7,
+    "fallback_route": "default_llm_service",
+    "priority_mode": "intent_first"
+  },
+  "default_route": "default_llm_service",
+  "route_config": {
+    "rental_rent_search": {
+      "name": "找房检索服务",
+      "route_to": "house_search_plugin",
+      "description": "找房相关意图路由到房源检索插件"
+    },
+    "rental_rent_search_by_location": {
+      "name": "按位置找房服务",
+      "route_to": "house_search_plugin",
+      "description": "按位置找房意图路由到房源检索插件"
+    },
+    "rental_rent_search_by_house": {
+      "name": "按房源条件找房服务",
+      "route_to": "house_search_plugin",
+      "description": "按户型/特征找房意图路由到房源检索插件"
+    },
+    "rental_rent_search_by_price": {
+      "name": "按价格找房服务",
+      "route_to": "house_search_plugin",
+      "description": "按价格区间找房意图路由到房源检索插件"
+    },
+    "rental_rent_consult": {
+      "name": "租房咨询服务",
+      "route_to": "rent_consult_plugin",
+      "description": "租房相关咨询路由到咨询服务插件"
+    },
+    "rental_rent_appointment": {
+      "name": "预约看房服务",
+      "route_to": "appointment_service",
+      "description": "预约看房相关意图路由到预约服务"
+    },
+    "rental_rent_appoint_view": {
+      "name": "提交看房预约服务",
+      "route_to": "appointment_service",
+      "description": "提交看房预约路由到预约服务"
+    },
+    "rental_rent_price_ask": {
+      "name": "价格咨询服务",
+      "route_to": "price_consult_service",
+      "description": "价格/议价相关咨询路由到价格服务"
+    },
+    "rental_rent_apply": {
+      "name": "租房申请服务",
+      "route_to": "rent_apply_service",
+      "description": "租房申请/预订相关路由到申请服务"
+    },
+    "rental_rent_after_service": {
+      "name": "租后服务",
+      "route_to": "after_service_plugin",
+      "description": "租后维修/投诉等路由到租后服务"
+    },
+    "rental_rent_after_repair": {
+      "name": "报修服务",
+      "route_to": "repair_service",
+      "description": "报修意图路由到维修工单服务"
+    },
+    "rental_rent_renew": {
+      "name": "续租服务",
+      "route_to": "renew_service",
+      "description": "续租相关意图路由到续租服务"
+    },
+    "rental_rent_terminate": {
+      "name": "退租服务",
+      "route_to": "terminate_service",
+      "description": "退租/解约相关路由到退租服务"
+    },
+    "rental_rent_transfer": {
+      "name": "转租服务",
+      "route_to": "transfer_service",
+      "description": "转租/换租相关路由到转租服务"
+    },
+    "request": {
+      "name": "指令请求服务",
+      "route_to": "command_service",
+      "description": "顶层指令类意图路由到指令处理服务"
+    },
+    "question": {
+      "name": "咨询问答服务",
+      "route_to": "qa_service",
+      "description": "顶层问答类意图路由到问答服务"
+    },
+    "inform": {
+      "name": "信息告知服务",
+      "route_to": "inform_service",
+      "description": "顶层信息告知类意图路由到信息处理服务"
+    },
+    "emotion": {
+      "name": "情绪处理服务",
+      "route_to": "emotion_service",
+      "description": "顶层情绪类意图路由到情绪安抚服务"
+    },
+    "social": {
+      "name": "闲聊服务",
+      "route_to": "chat_service",
+      "description": "顶层闲聊类意图路由到闲聊服务"
+    },
+    "narrative": {
+      "name": "叙事服务",
+      "route_to": "narrative_service",
+      "description": "顶层叙事类意图路由到内容理解服务"
+    }
+  },
+  "priority_config": {
+    "rental_rent_search": 1000,
+    "rental_rent_appointment": 950,
+    "rental_rent_apply": 900,
+    "rental_rent_after_service": 850,
+    "rental_rent_price_ask": 800,
+    "rental_rent_consult": 750,
+    "rental_rent_renew": 700,
+    "rental_rent_terminate": 650,
+    "rental_rent_transfer": 600,
+    "request": 500,
+    "question": 450,
+    "inform": 400,
+    "emotion": 350,
+    "social": 300,
+    "narrative": 250
+  }
+}

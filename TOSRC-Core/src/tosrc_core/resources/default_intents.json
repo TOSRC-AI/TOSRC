@@ -1,0 +1,486 @@
+{
+  "version": "1.0.0",
+  "description": "TOSRC内置通用6大类顶层意图库，所有租户默认共享",
+  "intents": [
+    {
+      "intent_code": "request",
+      "intent_name": "请求/指令",
+      "parent_id": 0,
+      "level": 1,
+      "priority": 100,
+      "is_enabled": true,
+      "description": "核心：明确要求对方做某事、执行动作，优先级最高",
+      "children": [
+        {
+          "intent_code": "request_action",
+          "intent_name": "要求操作执行",
+          "parent_id": null,
+          "level": 2,
+          "priority": 110,
+          "is_enabled": true,
+          "description": "要求执行特定操作、指令"
+        },
+        {
+          "intent_code": "request_provide",
+          "intent_name": "请求提供资料",
+          "parent_id": null,
+          "level": 2,
+          "priority": 120,
+          "is_enabled": true,
+          "description": "请求提供资料、物品、信息"
+        },
+        {
+          "intent_code": "request_help",
+          "intent_name": "求助帮忙",
+          "parent_id": null,
+          "level": 2,
+          "priority": 130,
+          "is_enabled": true,
+          "description": "求助、请求协助"
+        },
+        {
+          "intent_code": "request_urge",
+          "intent_name": "催促处理",
+          "parent_id": null,
+          "level": 2,
+          "priority": 140,
+          "is_enabled": true,
+          "description": "催促、要求加快处理"
+        },
+        {
+          "intent_code": "request_service",
+          "intent_name": "服务预约",
+          "parent_id": null,
+          "level": 2,
+          "priority": 150,
+          "is_enabled": true,
+          "description": "预约、办理、报修、申请服务"
+        },
+        {
+          "intent_code": "request_aftersale",
+          "intent_name": "售后处理",
+          "parent_id": null,
+          "level": 2,
+          "priority": 160,
+          "is_enabled": true,
+          "description": "报修、投诉、售后相关处理"
+        },
+        {
+          "intent_code": "request_book",
+          "intent_name": "预约预订",
+          "parent_id": null,
+          "level": 2,
+          "priority": 170,
+          "is_enabled": true,
+          "description": "预约、预订、安排时间"
+        },
+        {
+          "intent_code": "request_negotiate",
+          "intent_name": "议价协商",
+          "parent_id": null,
+          "level": 2,
+          "priority": 180,
+          "is_enabled": true,
+          "description": "议价、商量、讨价还价"
+        },
+        {
+          "intent_code": "request_modify",
+          "intent_name": "修改调整",
+          "parent_id": null,
+          "level": 2,
+          "priority": 190,
+          "is_enabled": true,
+          "description": "修改、调整、更换信息"
+        }
+      ]
+    },
+    {
+      "intent_code": "question",
+      "intent_name": "询问/疑问",
+      "parent_id": 0,
+      "level": 1,
+      "priority": 200,
+      "is_enabled": true,
+      "description": "核心：为了获取信息、澄清、确认而发问",
+      "children": [
+        {
+          "intent_code": "question_confirm",
+          "intent_name": "确认核实",
+          "parent_id": null,
+          "level": 2,
+          "priority": 210,
+          "is_enabled": true,
+          "description": "确认、核实、询问是否正确"
+        },
+        {
+          "intent_code": "question_info",
+          "intent_name": "查询信息",
+          "parent_id": null,
+          "level": 2,
+          "priority": 220,
+          "is_enabled": true,
+          "description": "查询信息、定义、情况"
+        },
+        {
+          "intent_code": "question_price",
+          "intent_name": "询问价格",
+          "parent_id": null,
+          "level": 2,
+          "priority": 230,
+          "is_enabled": true,
+          "description": "询问价格、费用相关"
+        },
+        {
+          "intent_code": "question_availability",
+          "intent_name": "询问有无",
+          "parent_id": null,
+          "level": 2,
+          "priority": 240,
+          "is_enabled": true,
+          "description": "询问有无、是否可提供"
+        },
+        {
+          "intent_code": "question_time",
+          "intent_name": "询问时间",
+          "parent_id": null,
+          "level": 2,
+          "priority": 250,
+          "is_enabled": true,
+          "description": "询问时间、时段、期限"
+        },
+        {
+          "intent_code": "question_location",
+          "intent_name": "询问地点",
+          "parent_id": null,
+          "level": 2,
+          "priority": 260,
+          "is_enabled": true,
+          "description": "询问地点、位置、地址"
+        },
+        {
+          "intent_code": "question_method",
+          "intent_name": "询问方法",
+          "parent_id": null,
+          "level": 2,
+          "priority": 270,
+          "is_enabled": true,
+          "description": "询问方法、怎么做、流程"
+        },
+        {
+          "intent_code": "question_reason",
+          "intent_name": "询问原因",
+          "parent_id": null,
+          "level": 2,
+          "priority": 280,
+          "is_enabled": true,
+          "description": "询问原因、为什么"
+        },
+        {
+          "intent_code": "question_opinion",
+          "intent_name": "询问看法",
+          "parent_id": null,
+          "level": 2,
+          "priority": 290,
+          "is_enabled": true,
+          "description": "询问看法、评价、感受"
+        }
+      ]
+    },
+    {
+      "intent_code": "inform",
+      "intent_name": "陈述/告知",
+      "parent_id": 0,
+      "level": 1,
+      "priority": 300,
+      "is_enabled": true,
+      "description": "核心：主动说出事实、状态、观点，不提问、不求办、不带强烈情绪",
+      "children": [
+        {
+          "intent_code": "inform_confirm",
+          "intent_name": "确认答复",
+          "parent_id": null,
+          "level": 2,
+          "priority": 310,
+          "is_enabled": true,
+          "description": "确认信息、核实、肯定答复"
+        },
+        {
+          "intent_code": "inform_fact",
+          "intent_name": "陈述事实",
+          "parent_id": null,
+          "level": 2,
+          "priority": 320,
+          "is_enabled": true,
+          "description": "陈述事实、状态、结果"
+        },
+        {
+          "intent_code": "inform_progress",
+          "intent_name": "同步进度",
+          "parent_id": null,
+          "level": 2,
+          "priority": 330,
+          "is_enabled": true,
+          "description": "同步进度、告知进展"
+        },
+        {
+          "intent_code": "inform_availability",
+          "intent_name": "说明有无",
+          "parent_id": null,
+          "level": 2,
+          "priority": 340,
+          "is_enabled": true,
+          "description": "说明有无、是否可提供"
+        },
+        {
+          "intent_code": "inform_condition",
+          "intent_name": "陈述条件",
+          "parent_id": null,
+          "level": 2,
+          "priority": 350,
+          "is_enabled": true,
+          "description": "陈述条件、限定要求"
+        },
+        {
+          "intent_code": "inform_announce",
+          "intent_name": "宣布决定",
+          "parent_id": null,
+          "level": 2,
+          "priority": 360,
+          "is_enabled": true,
+          "description": "宣布决定、说明计划"
+        },
+        {
+          "intent_code": "inform_explain",
+          "intent_name": "解释说明",
+          "parent_id": null,
+          "level": 2,
+          "priority": 370,
+          "is_enabled": true,
+          "description": "解释、说明、科普"
+        },
+        {
+          "intent_code": "inform_opinion",
+          "intent_name": "表达观点",
+          "parent_id": null,
+          "level": 2,
+          "priority": 380,
+          "is_enabled": true,
+          "description": "表达观点、评价、判断"
+        },
+        {
+          "intent_code": "inform_remind",
+          "intent_name": "提醒通知",
+          "parent_id": null,
+          "level": 2,
+          "priority": 390,
+          "is_enabled": true,
+          "description": "提醒、警示、通知"
+        }
+      ]
+    },
+    {
+      "intent_code": "emotion",
+      "intent_name": "情绪/态度",
+      "parent_id": 0,
+      "level": 1,
+      "priority": 400,
+      "is_enabled": true,
+      "description": "核心：表达主观感受、评价、好恶、情绪",
+      "children": [
+        {
+          "intent_code": "emotion_thank_apology",
+          "intent_name": "感谢道歉",
+          "parent_id": null,
+          "level": 2,
+          "priority": 410,
+          "is_enabled": true,
+          "description": "感谢、道歉、抱歉"
+        },
+        {
+          "intent_code": "emotion_negative",
+          "intent_name": "负面情绪",
+          "parent_id": null,
+          "level": 2,
+          "priority": 420,
+          "is_enabled": true,
+          "description": "不满、生气、烦躁、失望"
+        },
+        {
+          "intent_code": "emotion_complain",
+          "intent_name": "抱怨投诉",
+          "parent_id": null,
+          "level": 2,
+          "priority": 430,
+          "is_enabled": true,
+          "description": "抱怨、吐槽、发牢骚"
+        },
+        {
+          "intent_code": "emotion_worry",
+          "intent_name": "担忧焦虑",
+          "parent_id": null,
+          "level": 2,
+          "priority": 440,
+          "is_enabled": true,
+          "description": "担心、焦虑、害怕"
+        },
+        {
+          "intent_code": "emotion_hesitate",
+          "intent_name": "犹豫纠结",
+          "parent_id": null,
+          "level": 2,
+          "priority": 450,
+          "is_enabled": true,
+          "description": "犹豫、纠结、拿不定主意"
+        },
+        {
+          "intent_code": "emotion_positive",
+          "intent_name": "正面情绪",
+          "parent_id": null,
+          "level": 2,
+          "priority": 460,
+          "is_enabled": true,
+          "description": "满意、开心、赞美、认同"
+        },
+        {
+          "intent_code": "emotion_hope_expect",
+          "intent_name": "期待盼望",
+          "parent_id": null,
+          "level": 2,
+          "priority": 470,
+          "is_enabled": true,
+          "description": "期待、盼望、想要"
+        },
+        {
+          "intent_code": "emotion_agree_accept",
+          "intent_name": "同意接受",
+          "parent_id": null,
+          "level": 2,
+          "priority": 480,
+          "is_enabled": true,
+          "description": "同意、接受、可以"
+        }
+      ]
+    },
+    {
+      "intent_code": "social",
+      "intent_name": "社交/礼仪",
+      "parent_id": 0,
+      "level": 1,
+      "priority": 500,
+      "is_enabled": true,
+      "description": "核心：无业务信息，仅维持社交礼仪",
+      "children": [
+        {
+          "intent_code": "social_greet",
+          "intent_name": "问候打招呼",
+          "parent_id": null,
+          "level": 2,
+          "priority": 510,
+          "is_enabled": true,
+          "description": "问候、打招呼、问好"
+        },
+        {
+          "intent_code": "social_farewell",
+          "intent_name": "告别结束",
+          "parent_id": null,
+          "level": 2,
+          "priority": 520,
+          "is_enabled": true,
+          "description": "告别、结束对话"
+        },
+        {
+          "intent_code": "social_polite",
+          "intent_name": "礼貌用语",
+          "parent_id": null,
+          "level": 2,
+          "priority": 530,
+          "is_enabled": true,
+          "description": "客套、礼貌用语、客气话"
+        },
+        {
+          "intent_code": "social_comfort",
+          "intent_name": "安慰安抚",
+          "parent_id": null,
+          "level": 2,
+          "priority": 540,
+          "is_enabled": true,
+          "description": "安慰、安抚、共情"
+        },
+        {
+          "intent_code": "social_encourage",
+          "intent_name": "鼓励打气",
+          "parent_id": null,
+          "level": 2,
+          "priority": 550,
+          "is_enabled": true,
+          "description": "鼓励、打气"
+        },
+        {
+          "intent_code": "social_chat",
+          "intent_name": "闲聊",
+          "parent_id": null,
+          "level": 2,
+          "priority": 560,
+          "is_enabled": true,
+          "description": "闲聊、开启话题"
+        }
+      ]
+    },
+    {
+      "intent_code": "narrative",
+      "intent_name": "叙事/描述",
+      "parent_id": 0,
+      "level": 1,
+      "priority": 600,
+      "is_enabled": true,
+      "description": "核心：描述一段过程、场景、故事、经过",
+      "children": [
+        {
+          "intent_code": "narrative_state",
+          "intent_name": "描述状态",
+          "parent_id": null,
+          "level": 2,
+          "priority": 610,
+          "is_enabled": true,
+          "description": "描述状态、状况、现状"
+        },
+        {
+          "intent_code": "narrative_object",
+          "intent_name": "描写物品",
+          "parent_id": null,
+          "level": 2,
+          "priority": 620,
+          "is_enabled": true,
+          "description": "描写物品、人物、外观"
+        },
+        {
+          "intent_code": "narrative_scene",
+          "intent_name": "描写场景",
+          "parent_id": null,
+          "level": 2,
+          "priority": 630,
+          "is_enabled": true,
+          "description": "描写场景、环境、景物"
+        },
+        {
+          "intent_code": "narrative_process",
+          "intent_name": "描述过程",
+          "parent_id": null,
+          "level": 2,
+          "priority": 640,
+          "is_enabled": true,
+          "description": "描述事情经过、过程、故事"
+        },
+        {
+          "intent_code": "narrative_problem",
+          "intent_name": "描述问题",
+          "parent_id": null,
+          "level": 2,
+          "priority": 650,
+          "is_enabled": true,
+          "description": "详细描述故障、问题出现的过程"
+        }
+      ]
+    }
+  ]
+}

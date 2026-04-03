@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LLM Router 测试界面</title>
+    <script src="/static/libs/tailwindcss.min.js"></script>
+    <link rel="stylesheet" href="/static/libs/font-awesome/all.min.css">
+    <style>
+        .chat-bubble {
+            max-width: 70%;
+            word-wrap: break-word;
+        }
+        .user-bubble {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .bot-bubble {
+            background: #f3f4f6;
+            color: #1f2937;
+        }
+        .result-card {
+            background: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+    <!-- 顶部导航栏 -->
+    <nav class="bg-white shadow-md mb-6">
+        <div class="container mx-auto max-w-6xl px-4">
+            <div class="flex justify-between items-center py-4">
+                <div class="flex items-center space-x-2">
+                    <i class="fas fa-route text-blue-600 text-2xl"></i>
+                    <span class="font-bold text-xl text-gray-800">LLM Router 管理平台</span>
+                </div>
+                <div class="flex space-x-4">
+                    <a href="/" class="px-4 py-2 rounded-md bg-blue-600 text-white font-medium hover:bg-blue-700 transition">
+                        <i class="fas fa-comments mr-1"></i>聊天测试
+                    </a>
+                    <a href="/test/trend" target="_blank" class="px-4 py-2 rounded-md bg-green-600 text-white font-medium hover:bg-green-700 transition">
+                        <i class="fas fa-chart-line mr-1"></i>准确率趋势
+                    </a>
+                    <a href="/docs" target="_blank" class="px-4 py-2 rounded-md bg-purple-600 text-white font-medium hover:bg-purple-700 transition">
+                        <i class="fas fa-book mr-1"></i>接口文档
+                    </a>
+                    <a href="/metrics" target="_blank" class="px-4 py-2 rounded-md bg-orange-600 text-white font-medium hover:bg-orange-700 transition">
+                        <i class="fas fa-server mr-1"></i>监控指标
+                    </a>
+                    <a href="/health" target="_blank" class="px-4 py-2 rounded-md bg-gray-600 text-white font-medium hover:bg-gray-700 transition">
+                        <i class="fas fa-heartbeat mr-1"></i>健康检查
+                    </a>
+                    <a href="/config" target="_blank" class="px-4 py-2 rounded-md bg-teal-600 text-white font-medium hover:bg-teal-700 transition">
+                        <i class="fas fa-cog mr-1"></i>配置管理
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mx-auto max-w-4xl px-4 py-4">
+        <!-- 头部 -->
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">
+                <i class="fas fa-comments mr-2"></i>智能路由聊天测试
+            </h1>
+            <p class="text-gray-600">输入问题测试路由、意图识别和实体提取能力</p>
+        </div>
+
+        <!-- API Key 配置 -->
+        <div class="bg-white rounded-lg shadow-md p-4 mb-6">
+            <div class="flex items-center gap-4">
+                <div class="flex-1">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">API Key</label>
+                    <input type="text" id="apiKey" value="admin-llm-router-2026" 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                           placeholder="请输入API Key">
+                </div>
+                <button id="clearChatBtn" class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition">
+                    <i class="fas fa-trash mr-1"></i>清空聊天
+                </button>
+            </div>
+        </div>
+
+        <!-- 聊天区域 -->
+        <div id="chatContainer" class="bg-white rounded-lg shadow-md p-6 mb-6 h-[500px] overflow-y-auto">
+            <div class="flex justify-center mb-6">
+                <div class="bg-blue-100 text-blue-800 px-4 py-2 rounded-full text-sm">
+                    <i class="fas fa-info-circle mr-1"></i>欢迎使用LLM Router测试平台，请输入问题开始测试
+                </div>
+            </div>
+        </div>
+
+        <!-- 输入区域 -->
+        <div class="bg-white rounded-lg shadow-md p-4">
+            <div class="flex gap-3">
+                <input type="text" id="userInput" 
+                       class="flex-1 px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                       placeholder="请输入您的问题，例如：明天北京天气怎么样？"
+                       autocomplete="off">
+                <button id="sendBtn" class="px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition font-medium">
+                    <i class="fas fa-paper-plane mr-1"></i>发送
+                </button>
+            </div>
+            <div class="mt-2 text-sm text-gray-500">
+                <i class="fas fa-lightbulb mr-1"></i>提示：支持天气查询、时间查询、闲聊等场景测试
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const chatContainer = document.getElementById('chatContainer');
+        const userInput = document.getElementById('userInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const apiKeyInput = document.getElementById('apiKey');
+        const clearChatBtn = document.getElementById('clearChatBtn');
+        
+        // 全局意图映射字典，页面加载时从后端接口获取，完全无硬编码
+        let intentDict = {};
+        let level1Intents = {}; // 一级意图映射：code -> {name, priority}
+        
+        // 页面加载时获取意图字典，动态构建一级意图映射
+        async function loadIntentDict() {
+            try {
+                const res = await fetch('/api/v1/config/intent_dict', {
+                    headers: { 'X-API-Key': apiKeyInput.value || 'admin-llm-router-2026' }
+                });
+                const result = await res.json();
+                if (result.code === 200 && result.data) {
+                    intentDict = result.data;
+                    // 动态构建一级意图映射，一级意图是parent_code为空的，完全从后端数据生成，无硬编码
+                    level1Intents = {};
+                    for (const intentCode in intentDict) {
+                        const intent = intentDict[intentCode];
+                        if (!intent.parent_code || intent.parent_code === "") {
+                            level1Intents[intentCode] = {
+                                name: intent.intent_name,
+                                priority: intent.priority
+                            };
+                        }
+                    }
+                    console.log('✅ 意图字典加载完成，一级意图:', level1Intents);
+                }
+            } catch (e) {
+                console.warn('意图字典加载失败:', e);
+            }
+        }
+        
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            loadIntentDict();
+        });
+
+        // 发送消息
+        async function sendMessage() {
+            const inputText = userInput.value.trim();
+            const apiKey = apiKeyInput.value.trim();
+            
+            if (!inputText) return;
+            if (!apiKey) {
+                alert('请输入API Key');
+                return;
+            }
+
+            // 添加用户消息
+            addMessage(inputText, 'user');
+            userInput.value = '';
+
+            try {
+                // 调用新的聊天接口，包含完整的多意图识别结果
+                const chatResp = await fetch('/api/v1/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-API-Key': apiKey
+                    },
+                    body: JSON.stringify({
+                        text: inputText,
+                        user_id: 'test_user'
+                    })
+                });
+
+                const chatResult = await chatResp.json();
+                
+                if (chatResult.code === 200) {
+                    addResultMessage(chatResult.data);
+                } else {
+                    addErrorMessage(chatResult.message || '请求失败');
+                }
+            } catch (error) {
+                addErrorMessage('网络请求失败，请检查服务是否正常运行');
+            }
+        }
+
+        // 添加用户消息
+        function addMessage(text, type) {
+            const bubbleDiv = document.createElement('div');
+            bubbleDiv.className = `flex ${type === 'user' ? 'justify-end' : 'justify-start'} mb-4`;
+            
+            const bubble = document.createElement('div');
+            bubble.className = `chat-bubble ${type === 'user' ? 'user-bubble text-white' : 'bot-bubble'} px-4 py-3 rounded-lg`;
+            bubble.textContent = text;
+            
+            bubbleDiv.appendChild(bubble);
+            chatContainer.appendChild(bubbleDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        // 添加结果消息
+        function addResultMessage(chatData) {
+            const bubbleDiv = document.createElement('div');
+            bubbleDiv.className = 'flex justify-start mb-6';
+            
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'w-full max-w-full';
+
+            // 意图识别结果
+            const intentCard = document.createElement('div');
+            intentCard.className = 'result-card p-4 mb-3';
+            
+            let intentHtml = `
+                <div class="font-medium text-lg mb-3 text-blue-600 flex justify-between items-center">
+                    <span><i class="fas fa-lightbulb mr-1"></i>意图识别结果（按优先级排序）</span>
+                    <button class="px-2 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700 transition" onclick="correctIntent(this)">
+                        <i class="fas fa-edit mr-1"></i>纠正意图
+                    </button>
+                </div>
+                <div class="space-y-2">
+            `;
+            
+            // 打印意图识别结果，方便定位问题
+            console.log('🔍 完整意图识别结果:', chatData.intent.all_intents);
+            
+            // 按一级意图分组
+            const intentGroups = {};
+            const level1Order = []; // 一级意图优先级顺序
+            
+            chatData.intent.all_intents.forEach(intent => {
+                // 提取一级意图编码（去掉下划线后面的部分就是一级编码）
+                const level1Code = intent.intent_code.split('_')[0];
+                if (!intentGroups[level1Code]) {
+                    intentGroups[level1Code] = {
+                        level1Code,
+                        level1Name: level1Intents[level1Code]?.name || level1Code,
+                        priority: level1Intents[level1Code]?.priority || 999,
+                        children: []
+                    };
+                    level1Order.push(level1Code);
+                }
+                intentGroups[level1Code].children.push(intent);
+            });
+            
+            // 按一级意图优先级排序
+            level1Order.sort((a, b) => intentGroups[a].priority - intentGroups[b].priority);
+            
+            // 生成意图展示，按照设计方案分层
+            intentHtml += `
+                <div class="mb-4">
+                    <div class="text-sm font-medium text-gray-700 mb-2">📌 顶层意图</div>
+                    <div class="space-y-2 pl-4">
+            `;
+            level1Order.forEach((level1Code, index) => {
+                const group = intentGroups[level1Code];
+                const isMain = index === 0;
+                // 计算占比（简单按置信度占比计算）
+                const totalConfidence = chatData.intent.all_intents.reduce((sum, i) => sum + i.confidence, 0);
+                const percent = totalConfidence > 0 ? Math.round(group.children.reduce((sum, i) => sum + i.confidence, 0) / totalConfidence * 100) : 0;
+                
+                intentHtml += `
+                    <div class="flex items-center gap-2">
+                        ${isMain ? '<span class="text-xs bg-blue-600 text-white px-2 py-0.5 rounded">主意图</span>' : '<span class="text-xs bg-gray-500 text-white px-2 py-0.5 rounded">次要意图</span>'}
+                        <span class="font-semibold">${group.level1Name}（${level1Code}）</span>
+                        <span class="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded">占比: ${percent}%</span>
+                        <span class="text-xs bg-purple-100 text-purple-800 px-2 py-0.5 rounded">置信度: ${(Math.max(...group.children.map(i => i.confidence)) * 100).toFixed(1)}%</span>
+                        ${!isMain ? '<span class="text-xs text-gray-500">（存入上下文槽位）</span>' : ''}
+                    </div>
+                `;
+            });
+            intentHtml += `
+                    </div>
+                </div>
+                
+                <div class="mb-4">
+                    <div class="text-sm font-medium text-gray-700 mb-2">🔍 二级意图</div>
+                    <div class="space-y-2 pl-4">
+            `;
+            
+            // 生成二级意图显示
+            level1Order.forEach(level1Code => {
+                const group = intentGroups[level1Code];
+                group.children.forEach(intent => {
+                    // 优先级标签颜色
+                    let priorityColor = '';
+                    if (intent.priority < 200) priorityColor = 'bg-red-100 text-red-800';
+                    else if (intent.priority < 300) priorityColor = 'bg-orange-100 text-orange-800';
+                    else if (intent.priority < 400) priorityColor = 'bg-yellow-100 text-yellow-800';
+                    else if (intent.priority < 500) priorityColor = 'bg-green-100 text-green-800';
+                    else if (intent.priority < 600) priorityColor = 'bg-blue-100 text-blue-800';
+                    else priorityColor = 'bg-gray-100 text-gray-800';
+                    
+                    intentHtml += `
+                        <div class="flex items-center gap-3">
+                            <span class="text-sm">对应${group.level1Name}的二级意图：</span>
+                            <span class="font-semibold">${intent.intent_name}</span>
+                            <code class="text-xs text-gray-500">${intent.intent_code}</code>
+                            <span class="text-xs ${priorityColor} px-2 py-0.5 rounded">优先级: ${intent.priority}</span>
+                            <span class="text-xs bg-purple-100 text-purple-800 px-2 py-0.5 rounded">置信度: ${(intent.confidence * 100).toFixed(1)}%</span>
+                        </div>
+                    `;
+                });
+            });
+            
+            intentHtml += `
+                    </div>
+                </div>
+                
+                <div class="mb-4">
+                    <div class="text-sm font-medium text-gray-700 mb-2">🏠 业务意图（租房领域）</div>
+                    <div class="space-y-2 pl-4">
+                        <div class="flex items-center gap-3">
+                            <span class="text-xs bg-orange-600 text-white px-2 py-0.5 rounded">识别中</span>
+                            <span class="font-semibold">房源咨询</span>
+                            <span class="text-xs bg-purple-100 text-purple-800 px-2 py-0.5 rounded">置信度: 待完善</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-4">
+                    <div class="text-sm font-medium text-gray-700 mb-2">😊 情绪分析</div>
+                    <div class="space-y-2 pl-4">
+                        <div class="flex items-center gap-3">
+                            <span class="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded">正向情绪</span>
+                            <span class="font-semibold">满意、喜欢</span>
+                            <span class="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded">强度: 中等</span>
+                            <span class="text-xs bg-purple-100 text-purple-800 px-2 py-0.5 rounded">置信度: 待完善</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            intentHtml += `</div></div>`;
+            intentCard.innerHTML = intentHtml;
+            contentDiv.appendChild(intentCard);
+
+            // 实体识别结果
+            const entities = chatData.entities || [];
+            if (entities.length > 0) {
+                const entityCard = document.createElement('div');
+                entityCard.className = 'result-card p-4 mb-3';
+                
+                // 按实体类型分组显示，优先使用实体的name字段（后端返回的中文名称）
+                const entityGroups = {};
+                entities.forEach(e => {
+                    const groupKey = e.name || e.type;
+                    if (!entityGroups[groupKey]) {
+                        entityGroups[groupKey] = [];
+                    }
+                    entityGroups[groupKey].push(e);
+                });
+                
+                let entityHtml = `
+                    <div class="font-medium text-lg mb-3 text-purple-600">
+                        <i class="fas fa-tags mr-1"></i>🏷️ 实体识别结果（共${entities.length}个）
+                    </div>
+                    <div class="space-y-2">
+                `;
+                
+                for (const typeName in entityGroups) {
+                    const values = entityGroups[typeName].map(e => `"${e.text}"`).join('、');
+                    entityHtml += `
+                        <div class="flex items-center gap-1 pl-4">
+                            <span class="text-sm font-medium text-gray-700">${typeName}：</span>
+                            <span class="text-blue-600">${values}</span>
+                        </div>
+                    `;
+                }
+                
+                entityHtml += `</div>`;
+                entityCard.innerHTML = entityHtml;
+                contentDiv.appendChild(entityCard);
+             }
+             
+             // 业务意图识别结果（租房领域）
+                    const businessIntents = chatData.business_intent || [];
+                    if (businessIntents.length > 0) {
+                        const businessCard = document.createElement('div');
+                        businessCard.className = 'result-card p-4 mb-3';
+                        
+                        let businessHtml = `
+                            <div class="font-medium text-lg mb-3 text-orange-600">
+                                <i class="fas fa-briefcase mr-1"></i>🏠 业务意图识别（租房领域）
+                            </div>
+                            <div class="space-y-2 pl-4">
+                        `;
+                        
+                        businessIntents.forEach((intent, index) => {
+                            businessHtml += `
+                                <div class="flex items-center gap-3">
+                                    ${index === 0 ? '<span class="text-xs bg-orange-600 text-white px-2 py-0.5 rounded">主业务意图</span>' : ''}
+                                    <span class="font-semibold">${intent.intent_name}</span>
+                                    <code class="text-xs text-gray-500">${intent.intent_code}</code>
+                                    <span class="text-xs bg-orange-100 text-orange-800 px-2 py-0.5 rounded">优先级: ${intent.priority}</span>
+                                    <span class="text-xs bg-purple-100 text-purple-800 px-2 py-0.5 rounded">置信度: ${(intent.confidence * 100).toFixed(1)}%</span>
+                                </div>
+                            `;
+                        });
+                        
+                        businessHtml += `</div>`;
+                        businessCard.innerHTML = businessHtml;
+                        contentDiv.appendChild(businessCard);
+                    }
+                    
+                    // 情绪分析结果
+                    const emotion = chatData.emotion || {};
+                    if (emotion.type) {
+                        const emotionCard = document.createElement('div');
+                        emotionCard.className = 'result-card p-4 mb-3';
+                        
+                        let emotionColor = '';
+                        let emotionIcon = '';
+                        if (emotion.type === 'positive') {
+                            emotionColor = 'text-green-600';
+                            emotionIcon = '😊';
+                        } else if (emotion.type === 'negative') {
+                            emotionColor = 'text-red-600';
+                            emotionIcon = '😠';
+                        } else {
+                            emotionColor = 'text-gray-600';
+                            emotionIcon = '😐';
+                        }
+                        
+                        let emotionHtml = `
+                            <div class="font-medium text-lg mb-3 ${emotionColor}">
+                                <i class="fas fa-heart mr-1"></i>${emotionIcon} 情绪分析
+                            </div>
+                            <div class="space-y-2 pl-4">
+                                <div class="flex items-center gap-3">
+                                    <span class="font-semibold">情绪类型：${emotion.type_name}</span>
+                                    ${emotion.has_sarcasm ? '<span class="text-xs bg-yellow-600 text-white px-2 py-0.5 rounded">⚠️ 检测到反讽</span>' : ''}
+                                    <span class="text-xs bg-${emotion.type === 'positive' ? 'green' : emotion.type === 'negative' ? 'red' : 'gray'}-100 text-${emotion.type === 'positive' ? 'green' : emotion.type === 'negative' ? 'red' : 'gray'}-800 px-2 py-0.5 rounded">强度: ${emotion.intensity}/10</span>
+                                </div>
+                        `;
+                        
+                        if (emotion.matched_emotions && emotion.matched_emotions.length > 0) {
+                            emotionHtml += `<div class="mt-2"><div class="text-sm text-gray-500 mb-1">匹配到的情绪关键词：</div><div class="flex flex-wrap gap-2">`;
+                            emotion.matched_emotions.forEach(emo => {
+                                emotionHtml += `
+                                    <span class="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded">
+                                        ${emo.keyword} → ${emo.emotion_name}
+                                    </span>
+                                `;
+                            });
+                            emotionHtml += `</div></div>`;
+                        }
+                        
+                        emotionHtml += `</div>`;
+                        emotionCard.innerHTML = emotionHtml;
+                        contentDiv.appendChild(emotionCard);
+                    }
+
+            // 响应内容
+            const responseText = document.createElement('div');
+            responseText.className = 'bot-bubble px-4 py-3 rounded-lg';
+            responseText.textContent = `意图识别完成，已为您匹配到${chatData.intent.all_intents.length}个相关意图。`;
+            contentDiv.appendChild(responseText);
+
+            bubbleDiv.appendChild(contentDiv);
+            chatContainer.appendChild(bubbleDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+        
+        // 意图纠正功能
+        function correctIntent(btn) {
+            alert('意图纠正功能开发中，敬请期待！');
+        }
+
+        // 添加错误消息
+        function addErrorMessage(message) {
+            const bubbleDiv = document.createElement('div');
+            bubbleDiv.className = 'flex justify-start mb-4';
+            
+            const bubble = document.createElement('div');
+            bubble.className = 'chat-bubble bg-red-100 text-red-800 px-4 py-3 rounded-lg';
+            bubble.innerHTML = `<i class="fas fa-exclamation-circle mr-1"></i>${message}`;
+            
+            bubbleDiv.appendChild(bubble);
+            chatContainer.appendChild(bubbleDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        // 清空聊天
+        clearChatBtn.addEventListener('click', () => {
+            chatContainer.innerHTML = `
+                <div class="flex justify-center mb-6">
+                    <div class="bg-blue-100 text-blue-800 px-4 py-2 rounded-full text-sm">
+                        <i class="fas fa-info-circle mr-1"></i>欢迎使用LLM Router测试平台，请输入问题开始测试
+                    </div>
+                </div>
+            `;
+        });
+
+        // 事件绑定
+        sendBtn.addEventListener('click', sendMessage);
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+</html>

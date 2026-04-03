@@ -1,0 +1,105 @@
+{
+    "scene": "rental",
+    "scene_name": "租房行业",
+    "entity_rules": [
+        {
+            "name": "rent_amount",
+            "pattern": "(租金|房租|月租|价格|预算)\\s*(\\d+[kKwW万千块元]*)",
+            "groups": ["keyword", "value"],
+            "entity_type": "rent_info",
+            "type": "normal",
+            "priority": 2
+        },
+        {
+            "name": "house_area",
+            "pattern": "(\\d+(\\.\\d+)?)\\s*(平|平米|平方|㎡|m²)",
+            "groups": ["value", "unit"],
+            "entity_type": "area",
+            "type": "normal",
+            "priority": 2
+        },
+        {
+            "name": "community_name",
+            "pattern": "([\\u4e00-\\u9fa5a-zA-Z0-9]+)(小区|花园|公寓|家园|苑)",
+            "groups": ["name", "suffix"],
+            "entity_type": "community",
+            "type": "normal",
+            "priority": 2
+        },
+        {
+            "name": "house_type",
+            "pattern": "(\\d)室(\\d)厅|(一|二|三|四|五)室(一|二|三|四|五)厅",
+            "groups": ["room", "hall"],
+            "entity_type": "house_type",
+            "type": "normal",
+            "priority": 2
+        },
+        {
+            "name": "floor",
+            "pattern": "(\\d+)楼|(低|中|高)楼层",
+            "groups": ["value"],
+            "entity_type": "floor",
+            "type": "normal",
+            "priority": 2
+        },
+        {
+            "name": "orientation",
+            "pattern": "朝(南|北|东|西)|(南北|东西)通透",
+            "groups": ["value"],
+            "entity_type": "orientation",
+            "type": "normal",
+            "priority": 2
+        }
+    ],
+    "intent_rules": [
+        {
+            "intent": "query_rent_price",
+            "keywords": ["租金", "房租", "价格", "多少钱", "预算"],
+            "pattern": ".*(租金|房租|价格|多少钱|预算).*",
+            "confidence": 0.95,
+            "priority": 3
+        },
+        {
+            "intent": "query_house_info",
+            "keywords": ["户型", "面积", "楼层", "朝向", "装修", "几室", "几厅"],
+            "pattern": ".*(户型|面积|楼层|朝向|装修|几室|几厅).*",
+            "confidence": 0.9,
+            "priority": 3
+        },
+        {
+            "intent": "query_community",
+            "keywords": ["小区", "花园", "公寓", "位置", "在哪", "地址"],
+            "pattern": ".*(小区|花园|公寓|位置|在哪|地址).*",
+            "confidence": 0.9,
+            "priority": 3
+        },
+        {
+            "intent": "complain_service",
+            "keywords": ["差", "糟糕", "不满意", "投诉", "坑", "垃圾"],
+            "pattern": ".*(差|糟糕|不满意|投诉|坑|垃圾).*",
+            "confidence": 0.95,
+            "priority": 3
+        },
+        {
+            "intent": "praise_service",
+            "keywords": ["好", "不错", "棒", "满意", "靠谱", "透明"],
+            "pattern": ".*(好|不错|棒|满意|靠谱|透明).*",
+            "confidence": 0.9,
+            "priority": 3
+        }
+    ],
+    "emotion_rules": {
+        "positive_words": ["满意", "不错", "棒", "优秀", "好", "靠谱", "透明", "及时"],
+        "negative_words": ["差", "糟糕", "不满意", "坑", "垃圾", "坏", "贵", "坑"],
+        "urgent_words": ["急", "赶紧", "马上", "速度", "快点"],
+        "calm_words": ["请问", "麻烦", "谢谢", "您好", "咨询"]
+    },
+    "negative_rules": [
+        {
+            "pattern": "(不|没|无|非)\\s*(要|是|想)\\s*.*",
+            "is_negated": true,
+            "priority": 1
+        }
+    ],
+    "priority": [1, 2, 3, 4]
+}

@@ -1,0 +1,89 @@
+{
+    "scene": "weather",
+    "scene_name": "天气行业",
+    "entity_rules": [
+        {
+            "name": "city",
+            "pattern": "([\\u4e00-\\u9fa5]+)(市|省|区|县)?(天气|气温|降水)",
+            "groups": ["city", "suffix"],
+            "entity_type": "location",
+            "type": "normal",
+            "priority": 2
+        },
+        {
+            "name": "date",
+            "pattern": "(今天|明天|后天|周一|周二|周三|周四|周五|周六|周日|本周|下周|\\d+月\\d+号|\\d+日)",
+            "groups": ["value"],
+            "entity_type": "date",
+            "type": "normal",
+            "priority": 2
+        },
+        {
+            "name": "temperature",
+            "pattern": "(\\d+)度|(\\d+)℃|(零下)?(\\d+)度",
+            "groups": ["value"],
+            "entity_type": "temperature",
+            "type": "normal",
+            "priority": 2
+        },
+        {
+            "name": "weather_type",
+            "pattern": "(晴|阴|多云|雨|雪|雾|冰雹|大风|台风|雾霾)",
+            "groups": ["value"],
+            "entity_type": "weather_type",
+            "type": "normal",
+            "priority": 2
+        }
+    ],
+    "intent_rules": [
+        {
+            "intent": "query_weather",
+            "keywords": ["天气", "气温", "温度", "下雨", "下雪", "吹风", "雾霾", "降水"],
+            "pattern": ".*(天气|气温|温度|下雨|下雪|吹风|雾霾|降水).*",
+            "confidence": 0.95,
+            "priority": 3
+        },
+        {
+            "intent": "query_temperature",
+            "keywords": ["温度", "气温", "多少度", "冷不冷", "热不热"],
+            "pattern": ".*(温度|气温|多少度|冷不冷|热不热).*",
+            "confidence": 0.9,
+            "priority": 3
+        },
+        {
+            "intent": "query_rain",
+            "keywords": ["下雨", "降水", "有没有雨", "带伞"],
+            "pattern": ".*(下雨|降水|有没有雨|带伞).*",
+            "confidence": 0.95,
+            "priority": 3
+        },
+        {
+            "intent": "query_wind",
+            "keywords": ["风", "大风", "台风", "风力"],
+            "pattern": ".*(风|大风|台风|风力).*",
+            "confidence": 0.9,
+            "priority": 3
+        },
+        {
+            "intent": "query_air_quality",
+            "keywords": ["空气质量", "雾霾", "pm2.5", "污染"],
+            "pattern": ".*(空气质量|雾霾|pm2.5|污染).*",
+            "confidence": 0.9,
+            "priority": 3
+        }
+    ],
+    "emotion_rules": {
+        "positive_words": ["好", "不错", "舒服", "适宜", "棒"],
+        "negative_words": ["糟糕", "难受", "太热", "太冷", "讨厌", "差"],
+        "urgent_words": ["急", "赶紧", "马上"],
+        "calm_words": ["请问", "麻烦", "谢谢"]
+    },
+    "negative_rules": [
+        {
+            "pattern": "(不|没|无|非)\\s*(要|是|想)\\s*.*",
+            "is_negated": true,
+            "priority": 1
+        }
+    ],
+    "priority": [1, 2, 3, 4]
+}

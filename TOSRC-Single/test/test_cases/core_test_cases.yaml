@@ -1,0 +1,149 @@
+# 核心功能测试用例库
+# 所有修改必须通过全部用例才能上线
+test_cases:
+  # 天气场景测试用例
+  - name: "天气查询-基础测试"
+    input: "明天北京天气怎么样"
+    expected:
+      intent: "天气查询"
+      entities:
+        - type: "时间"
+          text: "明天"
+        - type: "地点"
+          text: "北京"
+      route_to: "天气服务"
+      confidence: 1.0
+      source: "rule_engine"
+
+  - name: "天气查询-无地点"
+    input: "明天天气怎么样"
+    expected:
+      intent: "天气查询"
+      entities:
+        - type: "时间"
+          text: "明天"
+      route_to: "天气服务"
+      confidence: 1.0
+
+  - name: "天气查询-无时间"
+    input: "北京天气怎么样"
+    expected:
+      intent: "天气查询"
+      entities:
+        - type: "地点"
+          text: "北京"
+      route_to: "天气服务"
+      confidence: 1.0
+
+  - name: "天气预警查询-基础测试"
+    input: "明天北京有暴雨预警吗"
+    expected:
+      intent: "天气预警查询"
+      entities:
+        - type: "时间"
+          text: "明天"
+        - type: "地点"
+          text: "北京"
+        - type: "天气类型"
+          text: "暴雨预警"
+      route_to: "天气预警服务"
+      confidence: 1.0
+
+  - name: "天气查询-口语化测试"
+    input: "今儿个北京热不热"
+    expected:
+      intent: "天气查询"
+      entities:
+        - type: "时间"
+          text: "今儿个"
+        - type: "地点"
+          text: "北京"
+        - type: "天气类型"
+          text: "热"
+      route_to: "天气服务"
+      confidence: 1.0
+
+  # 租房场景测试用例
+  - name: "租房查询-基础测试"
+    input: "我要租个3000元的两室一厅"
+    expected:
+      intent: "租房查询"
+      entities:
+        - type: "价格"
+          text: "3000元"
+        - type: "房型"
+          text: "两室一厅"
+      route_to: "租房服务"
+      confidence: 1.0
+
+  - name: "房价咨询测试"
+    input: "北京朝阳区两室一厅多少钱一个月"
+    expected:
+      intent: "房价咨询"
+      entities:
+        - type: "房型"
+          text: "两室一厅"
+      route_to: "房价服务"
+      confidence: 1.0
+
+  - name: "房源报修测试"
+    input: "卫生间漏水了需要报修"
+    expected:
+      intent: "房源报修"
+      entities:
+        - type: "房间"
+          text: "卫生间"
+        - type: "问题"
+          text: "漏水"
+      route_to: "报修服务"
+      confidence: 1.0
+
+  - name: "户型咨询测试"
+    input: "这个房子有多大面积"
+    expected:
+      intent: "户型咨询"
+      route_to: "户型服务"
+      confidence: 1.0
+
+  - name: "租房查询-多实体测试"
+    input: "我想在地铁10号线附近租个朝南的一室一厅，预算5000以内"
+    expected:
+      intent: "租房查询"
+      entities:
+        - type: "地铁"
+          text: "地铁10号线"
+        - type: "朝向"
+          text: "朝南"
+        - type: "房型"
+          text: "一室一厅"
+        - type: "价格"
+          text: "5000以内"
+      route_to: "租房服务"
+      confidence: 1.0
+
+  # 边界测试用例
+  - name: "兜底测试-无匹配意图"
+    input: "今天吃什么"
+    expected:
+      intent: null
+      route_to: "默认大模型服务"
+      confidence: 0.0
+      source: "default"
+
+# 配置管理测试用例
+config_test_cases:
+  - name: "场景列表查询"
+    endpoint: "/api/v1/config/scenes?env=dev"
+    expected_status: 200
+    expected_count: 2
+    expected_scene_ids: ["天气", "租房"]
+
+  - name: "场景配置查询-天气"
+    endpoint: "/api/v1/config/scene/天气?env=dev"
+    expected_status: 200
+    expected_fields: ["base", "intent", "entity", "route"]
+
+  - name: "场景配置查询-租房"
+    endpoint: "/api/v1/config/scene/租房?env=dev"
+    expected_status: 200
+    expected_fields: ["base", "intent", "entity", "route"]
